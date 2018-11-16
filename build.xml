@@ -1,0 +1,628 @@
+<project name="Exata Software" default="deploy.testes" basedir=".">
+	<description>
+Build do Exata e "Integracao PAF-ECF" e execucao de testes unitarios.
+
+  Propriedades definidas por padrao:
+  +==========================================================================+
+    exata.nome         : Exata Desenvolvimento
+    exata.id           : EXATA_DEV
+    exata.versao       : 0.0.0.0 dev
+    exata.versao.id    : 0,0,0,0
+    exata.projeto      : EXATA
+    exata.projeto.nome : Exata
+    build.config       : Release
+    build.verbosity    : minimal
+  +==========================================================================+
+
+  Definicoes:
+    exata.nome: Nome da aplicacao que esta sendo construida.
+	exata.id: ID de identificacao do aplicacao. ID's disponiveis:
+	  EXATA_CX_RAPIDO
+	  EXATA_COM_COMPLETO
+	  EXATA_COM_NFE
+	  EXATA_COM_PAFECF
+	  EXATA_COM_SAT
+	  EXATA_DEV
+	  EXATA_LOCACAO
+	  EXATA_OS
+	  EXATA_TRANSPORTES
+	  EXATA_TRANSP_COMPLETO
+	  EXATA_PEDIDO_DE_COMPRA
+
+	exata.projeto: ID de identificacao do projeto a ser compilado:
+	  EXATA
+	  INTEGRACAO-PAFECF
+	  INTEGRADOR-EXATA
+
+	exata.versao: Versao da construcao. Formato: "0.0.0.0".
+	exata.versao.id: ID da versao. Formato: "0,0,0,0".
+	build.config: Qual configuracao de construcao. Disponiveis:
+	  Release
+	  Debug
+
+	build.verbosity: Nivel de detalhamento do log. Disponiveis:
+	  quiet
+	  minimal
+	  normal
+	  detailed
+	  diagnostic
+    
+  Para alterar qualquer uma das propriedades bastar informar o parametro
+    "-Dpropriedade=novo_valor"
+	</description>
+  
+	<!-- Detalhes do Exata -->
+    <property name="exata.instalador" location="./Instalador" />
+
+	<property name="exata.versao" value="0.0.0.0 dev" />
+	<property name="exata.versao.id" value="0,0,0,0" />
+	<property name="exata.nome" value="Exata Dev" />
+	<property name="exata.id" value="EXATA_DEV" />
+	<property name="exata.projeto" value="EXATA" />
+	<property name="exata.projeto.nome" value="Exata" />
+	
+	<!-- Acesso as variáveis de ambiente -->
+	<property environment="env" />
+	
+	<!-- Utilitários compilação e configuração do Exata -->
+	<property name="exata.utils" location="./utils" />
+
+	<!-- Configuração do build: Release ou Debug -->
+	<property name="build.config" value="Release" />
+	<property name="build.verbosity" value="minimal" />
+
+	<!-- ID's do Exata disponíveis... -->
+	<property name="EXATA_CX_RAPIDO" value="Exata Caixa Rápido" />
+	<property name="EXATA_COM_COMPLETO" value="Exata Comercial Completo" />
+	<property name="EXATA_COM_NFE" value="Exata Comercial NF-e" />
+	<property name="EXATA_COM_PAFECF" value="Exata Comercial PAF-ECF" />
+	<property name="EXATA_COM_SAT" value="Exata Comercial SAT" />
+	<property name="EXATA_DEV" value="Exata Desenvolvimento" />
+	<property name="EXATA_LOCACAO" value="Exata Locação" />
+	<property name="EXATA_OS" value="Exata OS" />
+	<property name="EXATA_TRANSPORTES" value="Exata Transportes" />
+	<property name="EXATA_TRANSP_COMPLETO" value="Exata Transportes Completo" />
+	<property name="EXATA_PEDIDO_DE_COMPRA" value="Exata Pedido de Compra" />
+	
+
+	<!-- Verifica se todas as propriedades estão disponíveis. -->
+	<fail unless="exata.versao" message='Versao (exata.versao) nao informada. Ex: "-Dexata.versao=3.0.0.0"' />
+	<fail unless="exata.versao.id" message='ID da versao (exata.versao.id) nao informada. Ex: "-Dexata.versao.id=3,0,0,0"' />
+	<fail unless="exata.nome" message='Nome do aplicativo (exata.nome) nao informado. Ex: "-Dexata.nome=Exata Desenvolvimento"' />
+	<fail unless="exata.id" 
+		message='ID do aplicativo (exata.id) nao informado. Ex: "-Dexata.id=EXATA_DEV" // IDs disponíveis: 
+		EXATA_CX_RAPIDO, EXATA_COM_COMPLETO, EXATA_COM_NFE, EXATA_COM_PAFECF, EXATA_COM_SAT, 
+		EXATA_DEV, EXATA_LOCACAO, EXATA_OS, EXATA_TRANSPORTES, EXATA_TRANSP_COMPLETO e EXATA_PEDIDO_DE_COMPRA' />
+
+	<condition property="exata.id.ok">
+		<or>
+			<equals arg1="${exata.id}" arg2="EXATA_CX_RAPIDO" />
+			<equals arg1="${exata.id}" arg2="EXATA_COM_COMPLETO" />
+			<equals arg1="${exata.id}" arg2="EXATA_COM_NFE" />
+			<equals arg1="${exata.id}" arg2="EXATA_COM_PAFECF" />
+			<equals arg1="${exata.id}" arg2="EXATA_COM_SAT" />
+			<equals arg1="${exata.id}" arg2="EXATA_DEV" />
+			<equals arg1="${exata.id}" arg2="EXATA_LOCACAO" />
+			<equals arg1="${exata.id}" arg2="EXATA_OS" />
+			<equals arg1="${exata.id}" arg2="EXATA_TRANSPORTES" />
+			<equals arg1="${exata.id}" arg2="EXATA_TRANSP_COMPLETO" />
+			<equals arg1="${exata.id}" arg2="EXATA_PEDIDO_DE_COMPRA" />
+		</or>
+	</condition>
+
+	<fail message="A ID do aplicativo informada (${exata.id}) nao esta disponivel.">
+		<condition>
+			<not>
+				<isset property="exata.id.ok" />
+			</not>
+		</condition>
+	</fail>
+
+	<condition property="exata.projeto.ok">
+		<or>
+			<equals arg1="${exata.projeto}" arg2="EXATA" />
+			<equals arg1="${exata.projeto}" arg2="INTEGRACAO-PAFECF" />
+			<equals arg1="${exata.projeto}" arg2="INTEGRADOR-EXATA" />
+		</or>
+	</condition>
+
+	<script language="javascript"><![CDATA[
+
+		var exata_projeto = project.getProperty("exata.projeto");
+		
+		switch (exata_projeto) {
+			case "EXATA": 
+				project.setProperty("exata.projeto.nome", "Exata");
+				project.setProperty("exata.projeto.artefato", "Exata");
+				break;
+			case "INTEGRACAO-PAFECF":
+				project.setProperty("exata.projeto.nome", "Integração PAF-ECF");
+				project.setProperty("exata.projeto.artefato", "IntegracaoPAFECF");
+				break;
+			case "INTEGRADOR-EXATA":
+				project.setProperty("exata.projeto.nome", "Integrador Exata");
+				project.setProperty("exata.projeto.artefato", "Integrador");
+				break;
+		}
+	]]></script>
+
+	<script language="javascript"><![CDATA[
+		if (project.getProperty("exata.projeto") == "EXATA") {
+			var exata_id = project.getProperty("exata.id");
+			var exata_nome = project.getProperty(exata_id);
+		} else {
+			var exata_nome = project.getProperty("exata.projeto.nome");
+		}
+
+		project.setProperty("exata.nome", exata_nome);
+	]]></script>
+
+	<target name="testes" description="Localiza todos os testes e os executa.">
+		<echo message="Compilando testes..." />
+		<apply executable="msbuild.exe" dir="." failonerror="true" force="true">
+			<arg value="/t:Build" />
+			<arg value="/p:Config=Debug" />
+			<arg value="/p:Platform=Win32" />
+			<arg value="/v:${build.verbosity}" />
+			<srcfile />
+
+			<fileset dir=".">
+				<include name="**/testes/Testes.dproj" />
+				<include name="**/tests/tests.dproj" />
+			</fileset>
+		</apply>
+
+		<echo message="Executando testes..." />
+		<apply executable="cmd.exe" dir="." failonerror="true" force="true">
+			<arg value="/c" />
+			<arg value="call" />
+			<srcfile />
+			<arg value="-exit:Continue" />
+			<arg value="-b" />
+
+			<fileset dir=".">
+				<include name="**/tests/Win32/Debug/tests.exe" />
+				<include name="**/testes/Win32/Debug/Testes.exe" />
+			</fileset>
+		</apply>
+	</target>
+
+	<target name="recursos" description="Constroi os recursos (resources) necessarios.">
+		<delete file="./res/utils/_dump.zip" failonerror="false"/>
+		<delete file="./res/DF-e/Schemas-CTe/schemas-cte.zip" failonerror="false"/>
+		<delete file="./res/DF-e/Schemas-MDFe/schemas-mdfe.zip" failonerror="false"/>
+
+		<echo message="Build de utilitario de atualizacao..." />
+		<apply executable="msbuild.exe" dir="./utils/update" failonerror="true" force="true">
+			<arg value="/t:Build" />
+			<arg value="/p:Config=${build.config}" />
+			<arg value="/p:Platform=Win32" />
+			<arg value="/v:${build.verbosity}" />
+			<srcfile />
+
+			<fileset dir="./utils/update">
+				<include name="Update.dproj" />
+			</fileset>
+		</apply>
+
+		<echo message="Build de utilitário do instalador para manipulação do MySQL..." />
+		<apply executable="msbuild.exe" dir="./utils/mysqlutil" failonerror="true" force="true">
+			<arg value="/t:Build" />
+			<arg value="/p:Config=Release" />
+			<arg value="/p:Platform=Win32" />
+			<arg value="/v:${build.verbosity}" />
+
+			<fileset dir="./utils/mysqlutil">
+				<include name="mysqlutil.dproj" />
+			</fileset>
+		</apply>
+
+		<echo message="Compactando utilitario de atualizacao..." />
+		<zip destfile="./res/utils/_update.zip" level="9" update="true">
+			<fileset dir="./utils/update/Win32/${build.config}">
+				<include name="Update.exe" />
+			</fileset>
+		</zip>
+
+		<echo message="Compactando utilitario de dump..." />
+		<zip destfile="./res/utils/_dump.zip" level="9" update="true">
+			<fileset dir="./res/utils">
+				<include name="dump.exe" />
+			</fileset>
+		</zip>
+
+		<echo message="Compactando schemas do CT-e..." />
+		<zip destfile="./res/DF-e/Schemas-CTe/schemas-cte.zip" level="9" update="true">
+			<fileset dir="./res/DF-e/Schemas-CTe/3.00">
+				<include name="*.xsd" />
+			</fileset>
+		</zip>
+
+		<echo message="Compactando schemas do MDF-e..." />
+		<zip destfile="./res/DF-e/Schemas-MDFe/schemas-mdfe.zip" level="9" update="true">
+			<fileset dir="./res/DF-e/Schemas-MDFe/3.00">
+				<include name="*.xsd" />
+			</fileset>
+		</zip>
+
+		<echo message="Compactando schemas da NF-e v. 3.10" />
+		<zip destfile="./res/DF-e/Schemas-NFe/schemas-nfe-310.zip" level="9" update="true">
+			<fileset dir="./res/DF-e/Schemas-NFe/3.10">
+				<include name="*.xsd" />
+			</fileset>
+		</zip>
+
+		<echo message="Compactando schemas da NF-e v. 4.00" />
+		<zip destfile="./res/DF-e/Schemas-NFe/schemas-nfe-400.zip" level="9" update="true">
+			<fileset dir="./res/DF-e/Schemas-NFe/4.00">
+				<include name="*.xsd" />
+			</fileset>
+		</zip>
+
+		<echo message="Compilando recursos (resources)..." />
+		<apply executable="${env.BDS}/bin/brcc32.exe" failonerror="true" force="true">
+			<arg value="-fo"/>
+			<targetfile/>
+			<srcfile/>
+
+			<fileset dir=".">
+				<patternset>
+					<include name="res/recursos*.rc" />
+				</patternset>
+			</fileset>
+
+			<mapper type="glob" from="*.rc" to="*.res"/>
+		</apply>
+	</target>
+
+	<target name="config" description="Configuracoes antes do build.">
+		<echo message="Fechando conexao com o banco de dados..." />
+		<!-- Constrói lista de DFM's a serem ajustados -->
+		<fileset id="exata.dtms" dir=".">
+			<patternset>
+				<include name="Exata/Fontes/Units/Dados.dfm" />
+				<include name="fontes/integracao-pafecf/DadosIntegracao.dfm" />
+			</patternset>
+		</fileset>
+
+		<!-- Cria temporário de dfm's -->
+		<copy todir="." overwrite="true" force="true">
+			<fileset refid="exata.dtms" />
+			<mapper type="glob" from="*" to="*.tmp" />
+		</copy>
+
+		<!-- Fecha a conexão de banco de dados -->
+		<apply executable="${exata.utils}/egrep.exe" failonerror="true">
+			<arg value="-v" />
+			<arg value="Connected = True" />
+			<srcfile suffix=".tmp" />
+
+			<fileset refid="exata.dtms" />
+
+			<redirector>
+				<outputmapper type="glob" from="*.dfm" to="./*.dfm" />
+			</redirector>
+		</apply>
+
+		<delete dir="." includes="**/*.dfm.tmp" />
+
+		<mkdir dir="./build" />
+		<mkdir dir="./deploy" />
+	</target>
+
+	<target name="build" description="Build do projeto">
+		<echo message="PROPRIEDADES ===================================================" />
+		<echo message="  'exata.nome'         => ${exata.nome}" />
+		<echo message="  'exata.id'           => ${exata.id}" />
+		<echo message="  'exata.versao'       => ${exata.versao}" />
+		<echo message="  'exata.versao.id'    => ${exata.versao.id}" />
+		<echo message="  'exata.projeto'      => ${exata.projeto}" />
+		<echo message="  'exata.projeto.nome' => ${exata.projeto.nome}" />
+		<echo message="  'build.config'       => ${build.config}" />
+		<echo message="  'build.verbosity'    => ${build.verbosity}" />
+		<echo message="================================================================" />
+
+		<echo message="Compilando informações de versão para o projeto '${exata.projeto}'..." />
+		<apply executable="${env.BDS}/bin/brcc32.exe" failonerror="true" force="true">
+			<arg value="-fo"/>
+			<targetfile/>
+			<arg value="-dVER_FILEVERSION=${exata.versao.id}" />
+			<arg value='-dVER_FILEVERSION_STR=\"${exata.versao}\"' />
+			<arg value="-dVER_PRODUCTVERSION=${exata.versao.id}" />
+			<arg value='-dVER_PRODUCTVERSION_STR=\"${exata.versao}\"' />
+			<arg value='-dVER_PRODUCTNAME_STR=\"${exata.nome}\"' />
+			<srcfile/>
+
+			<fileset dir=".">
+				<patternset>
+					<include name="res/versao.rc" />
+				</patternset>
+			</fileset>
+
+			<mapper type="glob" from="*.rc" to="*.res"/>
+		</apply>
+		
+		<echo message="Compilando projeto '${exata.projeto}'..." />
+		<apply executable="msbuild.exe" dir="./fontes/${exata.projeto}" failonerror="true" force="true">
+			<arg value="/t:Build" />
+			<arg value="/p:Config=${build.config}" />
+			<arg value='/p:Extra_Define=\"${exata.id}\"' />
+			<arg value="/p:Platform=Win32" />
+			<arg value="/v:${build.verbosity}" />
+			<srcfile />
+
+			<fileset dir="./fontes/${exata.projeto}">
+				<include name="*.dproj" />
+			</fileset>
+		</apply>
+
+		<echo message="Inserindo informacoes de depuracao..." />
+		<apply executable="${exata.utils}/MakeJclDbg.exe" dir="./bin" failonerror="true" force="true">
+			<arg value="-J" />
+			<srcfile />
+
+			<fileset dir="./bin">
+				<include name="${exata.projeto.artefato}.map" />
+			</fileset>
+		</apply>
+
+		<apply executable="${exata.utils}/MakeJclDbg.exe" dir="./bin" failonerror="true" force="true">
+			<arg value="-E" />
+			<srcfile />
+
+			<fileset dir="./bin">
+				<include name="${exata.projeto.artefato}.map" />
+			</fileset>
+		</apply>
+
+		<copy todir="./build/${exata.id}" flatten="true" overwrite="true" force="true">
+			<fileset dir="./bin">
+				<include name="${exata.projeto.artefato}.exe" />
+			</fileset>
+		</copy>
+
+		<zip destfile="./deploy/${exata.versao}/exe/${exata.projeto} - ${exata.id} - ${exata.versao}.zip" level="9">
+			<fileset dir="./build/${exata.id}">
+				<include name="${exata.projeto.artefato}.exe" />
+			</fileset>
+		</zip>
+	</target>
+
+	<target name="install.recursos" description="Organiza os recursos (dll's e outros arquivos) necessarios para construcao do instalador.">
+		<!-- Limpa diretório de arquivos para o instalador -->
+		<delete includeemptydirs="true">
+			<fileset dir="${exata.instalador}/Arquivos">
+				<include name="**/*" />
+				<exclude name="heidisql/**/*" />
+				<exclude name="*.ico" />
+				<exclude name="mariadb*" />
+				<exclude name="Suporte*" />
+			</fileset>
+		</delete>
+
+		<echo message="Criando diretorios para os arquivos que serao utilizados na construcao do instalador" />
+		<mkdir dir="${exata.instalador}/Arquivos/dlls" />
+		<mkdir dir="${exata.instalador}/Arquivos/BD" />
+		<mkdir dir="${exata.instalador}/Arquivos/imagens-boleto" />
+		<mkdir dir="${exata.instalador}/Arquivos/Schemas-NFe" />
+		<mkdir dir="${exata.instalador}/Arquivos/Scripts" />
+		<mkdir dir="${exata.instalador}/Arquivos/CobreBemX" />
+
+		<!-- Copia todos os arquivos necessários para construção do instalador -->
+		<copy todir="${exata.instalador}/Arquivos/dlls" flatten="true" overwrite="true" force="true">
+			<fileset dir="./lib/DLLs">
+				<include name="Capicom/*.dll" />
+				<include name="Capicom/*.bat" />
+				<include name="Diversos/*.dll" />
+				<include name="*.dll" />
+				<include name="MSVCR/*.dll" />
+				<include name="XMLSec/*.dll" />
+				<include name="DllInsc32.dll" />
+				<include name="wkhtmltopdf.exe" />
+				<include name="vcredist_x86.exe" />
+			</fileset>
+		</copy>
+
+		<!-- Copia as DLL's do OpenSSL -->
+		<copy todir="${exata.instalador}/Arquivos" flatten="true" overwrite="true" force="true">
+			<fileset dir="./lib/DLLs">
+				<include name="OpenSSL/*.dll" />
+			</fileset>
+		</copy>
+
+		<copy file="./lib/DLLs/Capicom/Alternativo/capicom.exe" tofile="${exata.instalador}/Arquivos/dlls/capicom_64.exe" />
+		<copy file="./utils/mysqlutil/mysqlutil.dll" tofile="${exata.instalador}/Arquivos/dlls/mysqlutil.dll" />
+
+		<copy todir="${exata.instalador}/Arquivos/BD" flatten="true" overwrite="true" force="true">
+			<fileset dir="./Banco de Dados">
+				<include name="BD-*.sql" />
+			</fileset>
+		</copy>
+
+		<copy todir="${exata.instalador}/Arquivos/imagens-boleto" flatten="true" overwrite="true" force="true">
+			<fileset dir="./res/imagens-boleto">
+				<include name="*.jpg" />
+				<include name="*.gif" />
+			</fileset>
+		</copy>
+
+		<copy todir="${exata.instalador}/Arquivos" overwrite="true" force="true" verbose="true">
+			<fileset dir="./res/DF-e">
+				<include name="Schemas*/*" />
+			</fileset>
+		</copy>
+
+		<copy todir="${exata.instalador}/Arquivos/Scripts" flatten="true" overwrite="true" force="true">
+			<fileset dir="./res/Scripts">
+				<include name="*.txt" />
+			</fileset>
+		</copy>
+
+		<copy todir="${exata.instalador}/Arquivos/CobrebemX" flatten="true" overwrite="true" force="true">
+			<fileset dir="./lib/CobreBemX">
+				<include name="*.dll" />
+				<include name="*.tlb" />
+				<include name="*.exe" />
+				<include name="*.html" />
+			</fileset>
+		</copy>
+
+		<copy todir="${exata.instalador}/Arquivos" flatten="true" overwrite="true" force="true">
+			<fileset dir="./bin">
+				<include name="Exata.ini" />
+				<include name="IntegracaoPAFECF.ini" />
+			</fileset>
+		</copy>
+
+		<copy todir="${exata.instalador}/Arquivos" flatten="true" overwrite="true" force="true">
+			<fileset dir="./bin">
+				<include name="Exata.ini" />
+				<include name="IntegracaoPAFECF.ini" />
+			</fileset>
+		</copy>
+
+		<copy todir="${exata.instalador}/Arquivos" flatten="true" overwrite="true" force="true">
+			<fileset dir="./build/EXATA_DEV">
+				<include name="IntegracaoPAFECF.exe" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="install.build" description="Faz a construcao do instalador.">
+		<copy todir="${exata.instalador}/Arquivos" flatten="true" overwrite="true" force="true">
+			<fileset dir="./build/${exata.id}">
+				<include name="Exata.exe" />
+			</fileset>
+		</copy>
+
+		<apply executable="iscc" dir="." failonerror="true" force="true">
+			<arg value="/FInstalador" />
+			<arg value="/DEXATA_ID=${exata.id}" />
+
+			<fileset dir="${exata.instalador}">
+				<include name="Exata.iss" />
+			</fileset>
+		</apply>
+
+		<copy todir="./build/${exata.id}" flatten="true" overwrite="true" force="true">
+			<fileset dir="${exata.instalador}/Output" erroronmissingdir="false">
+				<include name="Instalador.exe" />
+			</fileset>
+		</copy>
+
+		<zip destfile="./deploy/${exata.versao}/install/Instalador - ${exata.projeto} - ${exata.id} - ${exata.versao}.zip" level="9">
+			<fileset dir="./build/${exata.id}">
+				<include name="Instalador.exe" />
+			</fileset>
+		</zip>
+	</target>
+
+	<target name="limpar" description="Limpa todos os diretorios e arquivos temporarios">
+		<delete dir="./build" failonerror="false" />
+		<delete dir="./deploy" failonerror="false" />
+	</target>
+
+	<target name="deploy.local" description="Faz um deploy local para testes...">
+		<echo message="Fazendo backup..." />
+
+		<mkdir dir="./bin/_backup" />
+
+		<copy todir="./bin/_backup" verbose="false" overwrite="true" force="true">
+			<fileset dir="./bin">
+				<include name="**/*" />
+				<exclude name="_backup/**/*" />
+			</fileset>
+		</copy>
+
+		<echo message="Removendo arquivos antigos..." />
+
+		<delete includeemptydirs="true">
+			<fileset dir="./bin">
+				<include name="**/*" />
+				<exclude name="_backup/**/*" />
+				<exclude name="anexos/**/*" />
+				<exclude name="CF-e/**/*" />
+				<exclude name="contratos/**/*" />
+				<exclude name="CT-e/**/*" />
+				<exclude name="fotos-produtos/**/*" />
+				<exclude name="imagens-boleto/**/*" />
+				<exclude name="imagens-logotipo/**/*" />
+				<exclude name="licencas-boleto/**/*" />
+				<exclude name="logs/**/*" />
+				<exclude name="MDF-e/**/*" />
+				<exclude name="NF-e/**/*" />
+				<exclude name="Relatórios/**/*" />
+				<exclude name="remessas-boleto/**/*" />
+				<exclude name="SPED/**/*" />
+				<exclude name="Exata.ini" />
+				<exclude name="IntegracaoPAFECF.ini" />
+			</fileset>
+		</delete>
+
+		<echo message="Copiando recursos necessarios." />
+
+		<copy todir="./bin" flatten="true" overwrite="true" force="true">
+			<fileset dir="./lib/DLLs">
+				<include name="**/*.dll" />
+				<include name="wkhtmltopdf.exe" />
+			</fileset>
+		</copy>
+
+		<copy todir="./bin" overwrite="true" force="true">
+			<fileset dir="./res/DF-e">
+				<include name="Schemas*/*" />
+			</fileset>
+		</copy>
+
+		<echo message="Recursos e testes." />
+		<ant>
+			<target name="testes" />
+			<target name="recursos" />
+			<target name="config" />
+			<target name="install.recursos" />
+		</ant>
+
+		<echo message="Build: Integracao PAF-ECF" />
+		<ant>
+			<target name="build" />
+			<property name="exata.id" value="EXATA_DEV" />
+			<property name="exata.projeto" value="INTEGRACAO-PAFECF" />
+		</ant>
+
+		<echo message="Build: Integrador Exata" />
+		<ant>
+			<target name="build" />
+			<property name="exata.id" value="EXATA_DEV" />
+			<property name="exata.projeto" value="INTEGRADOR-EXATA" />
+		</ant>
+
+		<echo message="Build: Exata Desenvolvimento" />
+		<ant>
+			<target name="build" />
+			<target name="install.build" />
+			<property name="exata.id" value="EXATA_DEV" />
+			<property name="exata.projeto" value="EXATA" />
+		</ant>
+	</target>
+
+	<target name="upload" description="Envia resultado do deploy para outro diretorio para upload.">
+		<fail unless="upload.path" message='O local para upload do build não foi informado.' />
+		
+		<mkdir dir="${upload.path}/${exata.versao}" />
+		<mkdir dir="${upload.path}/${exata.versao}/Instaladores" />
+
+		<echo message="Copiando executaveis..." />
+		<copy todir="${upload.path}/${exata.versao}" flatten="true" overwrite="true" force="true">
+			<fileset dir="./deploy/${exata.versao}/exe">
+				<include name="*.zip" />
+			</fileset>
+		</copy>
+
+		<echo message="Copiando instaladores..." />
+		<copy todir="${upload.path}/${exata.versao}/Instaladores" flatten="true" overwrite="true" force="true">
+			<fileset dir="./deploy/${exata.versao}/install">
+				<include name="*.zip" />
+			</fileset>
+		</copy>
+	</target>
+</project>
