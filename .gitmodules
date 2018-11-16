@@ -1,0 +1,3 @@
+[submodule "submodule-01"]
+	path = submodule-01
+	url = git://github.com/gguimp/submodule-01.git
